@@ -1,4 +1,4 @@
-# Shell Script Obfuscator/Encryptor
+# Shell Obfuscator/Encryptor
 
 A powerful shell obfuscator/encryptor
 
