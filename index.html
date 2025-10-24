@@ -462,9 +462,9 @@ decode_layer() {
     echo "$data"
 }
 
-ENCODED_SCRIPT="${encoded}"
+x-isdave="${encoded}"
 
-eval "$(decode_layer "$ENCODED_SCRIPT")"
+eval "$(decode_layer "x-isdave")"
 `;
                         
                         document.getElementById('outputScript').value = finalScript;
