@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell Script Obfuscator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        ..header {
+    text-align: center;
+    padding: 40px 0;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border: 1px solid #333;
+    width: calc(100% - 50px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+        .title {
+            color: #00ff88;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.2em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel-title {
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #00ff88;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        textarea, select, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 300px;
+            resize: vertical;
+        }
+
+       
+.btn {
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    color: #000;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+        .btn:hover {
+            background: linear-gradient(135deg, #00cc6a 0%, #00aa55 100%);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .level-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .level-btn {
+            padding: 10px;
+            text-align: center;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .level-btn:hover {
+            background: #3d3d3d;
+        }
+
+        .level-btn.active {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #2d2d2d;
+            border-radius: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .alert-error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #00ff88;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #00ff88;
+        }
+
+        .feature h3 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #333;
+        }
+        
+       
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">SHELL SCRIPT OBFUSCATOR</h1>
+            <p class="subtitle">Shell Obfuscator</p>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2 class="panel-title">INPUT</h2>
+                
+                <div class="form-group">
+                    <label>Upload Shell Script File:</label>
+                    <input type="file" id="fileInput" accept=".sh,.bash" />
+                </div>
+
+                <div class="form-group">
+                    <label>Or Paste Script Here:</label>
+                    <textarea id="inputScript" placeholder="Paste your shell script here..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Obfuscation Level:</label>
+                    <div class="level-buttons">
+                        <div class="level-btn" data-level="1">Light</div>
+                        <div class="level-btn active" data-level="2">Medium</div>
+                        <div class="level-btn" data-level="3">Heavy</div>
+                        <div class="level-btn" data-level="4">Extreme</div>
+                    </div>
+                </div>
+
+                <button class="btn" id="obfuscateBtn">OBFUSCATE SCRIPT</button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Obfuscating script... This may take a few seconds.</p>
+                </div>
+
+                <div id="alert"></div>
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">OUTPUT</h2>
+                
+                <div class="form-group">
+                    <label>Obfuscated Script:</label>
+                    <textarea id="outputScript" readonly placeholder="Obfuscated script will appear here..."></textarea>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="inputSize">0</div>
+                        <div class="stat-label">Input Size</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="outputSize">0</div>
+                        <div class="stat-label">Output Size</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="obfuscationLevel">Medium</div>
+                        <div class="stat-label">Level</div>
+                    </div>
+                </div>
+
+                <button class="btn" id="downloadBtn" disabled>DOWNLOAD OBFUSCATED SCRIPT</button>
+                <button class="btn" id="copyBtn" disabled>COPY TO CLIPBOARD</button>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <h3>🔒 Strong Encryption</h3>
+                <p>Multiple layers of Base64 encoding and variable obfuscation</p>
+            </div>
+            <div class="feature">
+                <h3>⚡ Fast Processing</h3>
+                <p>Quick obfuscation with real-time progress indication</p>
+            </div>
+            <div class="feature">
+                <h3>🎯 No Deobfuscator</h3>
+                <p>Security-focused design without built-in deobfuscation</p>
+            </div>
+            <div class="feature">
+                <h3>🚀 Ready to Use</h3>
+                <p>Direct download and copy functionality</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Shell Script Obfuscator v2.0 | Secure your scripts with confidence</p>
+            <p>⚠️ For educational and legitimate security purposes only</p>
+        </div>
+    </div>
+
+    <script>
+        class ShellObfuscator {
+            constructor() {
+                this.currentLevel = 2;
+                this.initEventListeners();
+            }
+
+            initEventListeners() {
+                // Level buttons
+                document.querySelectorAll('.level-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentLevel = parseInt(btn.dataset.level);
+                        document.getElementById('obfuscationLevel').textContent = 
+                            ['Light', 'Medium', 'Heavy', 'Extreme'][this.currentLevel - 1];
+                    });
+                });
+
+                // File input
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    this.handleFileUpload(e.target.files[0]);
+                });
+
+                // Obfuscate button
+                document.getElementById('obfuscateBtn').addEventListener('click', () => {
+                    this.obfuscateScript();
+                });
+
+                // Download button
+                document.getElementById('downloadBtn').addEventListener('click', () => {
+                    this.downloadScript();
+                });
+
+                // Copy button
+                document.getElementById('copyBtn').addEventListener('click', () => {
+                    this.copyToClipboard();
+                });
+
+                // Input script change
+                document.getElementById('inputScript').addEventListener('input', () => {
+                    this.updateStats();
+                });
+            }
+
+            handleFileUpload(file) {
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('inputScript').value = e.target.result;
+                    this.updateStats();
+                    this.showAlert('File loaded successfully!', 'success');
+                };
+                reader.readAsText(file);
+            }
+
+            generateRandomString(length) {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let result = '';
+                for (let i = 0; i < length; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            }
+
+            multiBase64(data, iterations) {
+                for (let i = 0; i < iterations; i++) {
+                    data = btoa(unescape(encodeURIComponent(data)));
+                }
+                return data;
+            }
+
+            obfuscateVariables(script) {
+                // Simple variable obfuscation
+                const varRegex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)/g;
+                const variables = new Set();
+                let match;
+                
+                while ((match = varRegex.exec(script)) !== null) {
+                    if (match[1].length > 2 && !['IFS', 'PATH', 'HOME', 'USER', 'SHELL'].includes(match[1])) {
+                        variables.add(match[1]);
+                    }
+                }
+
+                variables.forEach(variable => {
+                    const newName = '_' + this.generateRandomString(12);
+                    const regex = new RegExp('\\b' + variable + '\\b', 'g');
+                    script = script.replace(regex, newName);
+                });
+
+                return script;
+            }
+
+            obfuscateStrings(script) {
+                // Obfuscate quoted strings
+                const stringRegex = /(["'])(?:(?=(\\?))\2.)*?\1/g;
+                return script.replace(stringRegex, (match) => {
+                    if (match.length > 4) {
+                        const content = match.slice(1, -1);
+                        let hex = '';
+                        for (let i = 0; i < content.length; i++) {
+                            hex += content.charCodeAt(i).toString(16).padStart(2, '0');
+                        }
+                        return `"\$(echo "${hex}" | xxd -p -r)"`;
+                    }
+                    return match;
+                });
+            }
+
+            addGarbageCode(script, count) {
+                let garbage = '';
+                for (let i = 0; i < count; i++) {
+                    const varName = '__' + this.generateRandomString(8) + '__';
+                    const value = this.generateRandomString(16);
+                    garbage += `${varName}="${value}"\n`;
+                }
+                
+                if (script.startsWith('#!/')) {
+                    const firstNewline = script.indexOf('\n');
+                    return script.substring(0, firstNewline + 1) + garbage + script.substring(firstNewline + 1);
+                }
+                return garbage + script;
+            }
+
+            obfuscateScript() {
+                const inputScript = document.getElementById('inputScript').value.trim();
+                
+                if (!inputScript) {
+                    this.showAlert('Please enter or upload a shell script!', 'error');
+                    return;
+                }
+
+                this.showLoading(true);
+                
+                // Simulate processing time
+                setTimeout(() => {
+                    try {
+                        let obfuscated = inputScript;
+                        
+                        // Apply obfuscation based on level
+                        const levels = {
+                            1: { varObf: true, base64: 2, garbage: 2 },
+                            2: { varObf: true, base64: 3, garbage: 5 },
+                            3: { varObf: true, base64: 5, garbage: 10 },
+                            4: { varObf: true, base64: 7, garbage: 15 }
+                        };
+                        
+                        const levelConfig = levels[this.currentLevel];
+                        
+                        if (levelConfig.varObf) {
+                            obfuscated = this.obfuscateVariables(obfuscated);
+                        }
+                        
+                        obfuscated = this.obfuscateStrings(obfuscated);
+                        obfuscated = this.addGarbageCode(obfuscated, levelConfig.garbage);
+                        
+                        const encoded = this.multiBase64(obfuscated, levelConfig.base64);
+                        
+                        const finalScript = `#!/bin/bash
+# Obfuscated by Shell Script Obfuscator
+# Generated on: ${new Date().toLocaleString()}
+# Security Level: ${this.currentLevel} (${['Light', 'Medium', 'Heavy', 'Extreme'][this.currentLevel - 1]})
+# Author : @dvalgtr - on GitHub
+
+decode_layer() {
+    local data="$1"
+    for ((i=0; i<${levelConfig.base64}; i++)); do
+        data=$(echo "$data" | base64 -d 2>/dev/null)
+    done
+    echo "$data"
+}
+
+ENCODED_SCRIPT="${encoded}"
+
+eval "$(decode_layer "$ENCODED_SCRIPT")"
+`;
+                        
+                        document.getElementById('outputScript').value = finalScript;
+                        this.updateStats();
+                        this.showAlert('Script obfuscated successfully!', 'success');
+                        
+                        document.getElementById('downloadBtn').disabled = false;
+                        document.getElementById('copyBtn').disabled = false;
+                        
+                    } catch (error) {
+                        this.showAlert('Error during obfuscation: ' + error.message, 'error');
+                    } finally {
+                        this.showLoading(false);
+                    }
+                }, 1000);
+            }
+
+            showLoading(show) {
+                document.getElementById('loading').style.display = show ? 'block' : 'none';
+                document.getElementById('obfuscateBtn').disabled = show;
+            }
+
+            showAlert(message, type) {
+                const alertDiv = document.getElementById('alert');
+                alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+                setTimeout(() => {
+                    alertDiv.innerHTML = '';
+                }, 5000);
+            }
+
+            updateStats() {
+                const inputScript = document.getElementById('inputScript').value;
+                const outputScript = document.getElementById('outputScript').value;
+                
+                document.getElementById('inputSize').textContent = this.formatSize(inputScript.length);
+                document.getElementById('outputSize').textContent = this.formatSize(outputScript.length);
+            }
+
+            formatSize(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            downloadScript() {
+                const script = document.getElementById('outputScript').value;
+                if (!script) return;
+
+                const blob = new Blob([script], { type: 'text/x-shellscript' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'obfuscated_script.sh';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showAlert('Script downloaded successfully!', 'success');
+            }
+
+            copyToClipboard() {
+                const outputScript = document.getElementById('outputScript');
+                outputScript.select();
+                document.execCommand('copy');
+                
+                this.showAlert('Script copied to clipboard!', 'success');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new ShellObfuscator();
+        });
+    </script>
+</body>
+</html>
+       
