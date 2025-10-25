@@ -1,6 +1,6 @@
 # Shell Script Obfuscator
 
-A powerful web-based shell script obfuscator and encryptor with a sleek black-themed interface.
+A powerful web-based shell script obfuscator and encryptor
 
 ##  Live Demo
 
