@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shell Script Obfuscator</title>
     <style>
-        /* CSS tetap sama seperti sebelumnya */
+        /* CSS tetap sama */
         * {
             margin: 0;
             padding: 0;
@@ -307,13 +307,31 @@
             constructor() {
                 this.currentLevel = 2;
                 this.reservedKeywords = new Set([
+                    // Shell keywords
                     'if', 'then', 'else', 'elif', 'fi', 'case', 'esac', 'for', 'while', 
                     'until', 'do', 'done', 'function', 'select', 'time', 'coproc',
+                    // Commands
                     'echo', 'printf', 'read', 'eval', 'exec', 'exit', 'return', 'shift',
                     'break', 'continue', 'export', 'local', 'declare', 'typeset', 'readonly',
-                    'unset', 'set', 'test', '[', ']', '[[', ']]', 'let', 'true', 'false',
+                    'unset', 'set', 'test', 'let', 'true', 'false', 'source', '.',
+                    // Built-in variables
                     'PATH', 'HOME', 'USER', 'SHELL', 'PWD', 'OLDPWD', 'IFS', 'PS1', 'PS2',
-                    'BASH', 'BASH_VERSION', 'HOSTNAME', 'UID', 'EUID', 'RANDOM', 'SECONDS'
+                    'BASH', 'BASH_VERSION', 'HOSTNAME', 'UID', 'EUID', 'RANDOM', 'SECONDS',
+                    'LINENO', 'FUNCNAME', 'BASH_SOURCE',
+                    // Common variables
+                    'OSTYPE', 'MACHTYPE', 'HOSTTYPE', 'DIRSTACK', 'GROUPS', 'HISTCMD',
+                    'HOSTNAME', 'HOSTTYPE', 'MACHTYPE', 'MAIL', 'MAILCHECK', 'OPTERR',
+                    'OPTIND', 'OSTYPE', 'PIPESTATUS', 'POSIXLY_CORRECT', 'PPID', 'PROMPT_COMMAND',
+                    'PS3', 'PS4', 'PWD', 'RANDOM', 'REPLY', 'SECONDS', 'SHELLOPTS', 'SHLVL',
+                    'TIMEFORMAT', 'TMOUT', 'UID', 'auto_resume', 'BASH', 'BASH_ENV', 'BASH_VERSINFO',
+                    'BASH_VERSION', 'COLUMNS', 'CDPATH', 'HISTFILE', 'HISTFILESIZE', 'HISTSIZE',
+                    'HISTCONTROL', 'HISTIGNORE', 'HISTTIMEFORMAT', 'HOME', 'HOSTFILE', 'HOSTTYPE',
+                    'IGNOREEOF', 'INPUTRC', 'LANG', 'LC_ALL', 'LC_COLLATE', 'LC_CTYPE',
+                    'LC_MESSAGES', 'LC_NUMERIC', 'LINES', 'LOGNAME', 'LS_COLORS', 'MACHTYPE',
+                    'MAIL', 'MAILPATH', 'OLDPWD', 'OSTYPE', 'PATH', 'PIPESTATUS', 'POSIXLY_CORRECT',
+                    'PPID', 'PROMPT_COMMAND', 'PS1', 'PS2', 'PS3', 'PS4', 'PWD', 'RANDOM',
+                    'REPLY', 'SECONDS', 'SHELL', 'SHELLOPTS', 'SHLVL', 'TERM', 'TIMEFORMAT',
+                    'TMOUT', 'UID', 'USER', 'VISUAL', 'EDITOR'
                 ]);
                 this.initEventListeners();
             }
@@ -384,58 +402,88 @@
             }
 
             obfuscateVariables(script) {
-                // Find all variable assignments and usages
-                const varRegex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)|\$([a-zA-Z_][a-zA-Z0-9_]*)\b|\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+                // Hanya obfuscate variabel user-defined, skip built-in dan special variables
+                const lines = script.split('\n');
                 const variableMap = new Map();
+                const userVariables = new Set();
                 
-                let match;
-                while ((match = varRegex.exec(script)) !== null) {
-                    const varName = match[1] || match[2] || match[3];
+                // Identifikasi variabel user-defined dari assignments
+                for (let line of lines) {
+                    // Match variable assignments (var=value)
+                    const assignmentMatch = line.match(/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=(?!=)/);
+                    if (assignmentMatch) {
+                        const varName = assignmentMatch[1];
+                        if (!this.reservedKeywords.has(varName) && 
+                            varName.length > 1 && 
+                            !varName.startsWith('_') &&
+                            !userVariables.has(varName)) {
+                            userVariables.add(varName);
+                        }
+                    }
                     
-                    // Skip reserved keywords, single letter vars, and already processed vars
-                    if (varName && 
-                        !this.reservedKeywords.has(varName) && 
-                        varName.length > 1 && 
-                        !variableMap.has(varName) &&
-                        !varName.startsWith('_')) {
-                        
-                        let newName;
-                        do {
-                            newName = this.generateRandomString(8 + Math.floor(Math.random() * 8));
-                        } while (variableMap.has(newName));
-                        
-                        variableMap.set(varName, newName);
+                    // Match local/declare statements
+                    const declMatch = line.match(/\b(?:local|declare|typeset)\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
+                    if (declMatch) {
+                        const varName = declMatch[1];
+                        if (!this.reservedKeywords.has(varName) && 
+                            varName.length > 1 && 
+                            !varName.startsWith('_') &&
+                            !userVariables.has(varName)) {
+                            userVariables.add(varName);
+                        }
                     }
                 }
-
-                // Replace variables in script
-                variableMap.forEach((newName, oldName) => {
-                    // Replace variable assignments and usages
-                    const regex = new RegExp(`\\b${oldName}\\b(?!\\s*\\()`, 'g');
-                    script = script.replace(regex, newName);
+                
+                // Generate new names untuk variabel user-defined
+                userVariables.forEach(oldName => {
+                    let newName;
+                    do {
+                        newName = this.generateRandomString(8 + Math.floor(Math.random() * 6));
+                    } while (variableMap.has(newName));
                     
-                    // Replace variable references with $
-                    const dollarRegex = new RegExp(`\\$${oldName}\\b`, 'g');
-                    script = script.replace(dollarRegex, `$${newName}`);
+                    variableMap.set(oldName, newName);
                 });
-
-                return script;
+                
+                // Replace variabel dalam script (dengan hati-hati)
+                let newScript = script;
+                variableMap.forEach((newName, oldName) => {
+                    // Replace assignments dan usage, tapi hindari string literals
+                    const regex = new RegExp(`\\b${oldName}\\b(?=\\s*=)`, 'g'); // Hanya assignments
+                    newScript = newScript.replace(regex, newName);
+                    
+                    // Replace usage dalam commands (tapi bukan dalam strings)
+                    const usageRegex = new RegExp(`(?<!['"\\$])\\b${oldName}\\b(?!\\s*\\()`, 'g');
+                    newScript = newScript.replace(usageRegex, newName);
+                    
+                    // Replace variable references dengan $
+                    const dollarRegex = new RegExp(`\\$${oldName}\\b`, 'g');
+                    newScript = newScript.replace(dollarRegex, `$${newName}`);
+                    
+                    // Replace array references
+                    const arrayRegex = new RegExp(`\\$\\{${oldName}(\\[.*?\\])?\\}`, 'g');
+                    newScript = newScript.replace(arrayRegex, `\${${newName}$1}`);
+                });
+                
+                return newScript;
             }
 
             obfuscateStrings(script) {
-                // Handle single and double quoted strings
+                // Obfuscate hanya string literal sederhana, hindari string dengan variabel/commands
                 const stringRegex = /(["'])((?:(?=(\\?))\3.)*?)\1/g;
                 
                 return script.replace(stringRegex, (match, quote, content) => {
-                    // Don't obfuscate very short strings or strings that look like commands
+                    // Skip jika string mengandung special characters atau sangat pendek
                     if (content.length <= 2 || 
                         content.includes('`') || 
                         content.includes('$(') ||
-                        content.trim().includes(' ')) {
+                        content.includes('${') ||
+                        content.includes('\\') ||
+                        content.trim().includes(' ') ||
+                        /^[0-9]/.test(content)) {
                         return match;
                     }
 
-                    // Use printf for better compatibility
+                    // Gunakan hex encoding yang aman
                     let hex = '';
                     for (let i = 0; i < content.length; i++) {
                         hex += '\\x' + content.charCodeAt(i).toString(16).padStart(2, '0');
@@ -445,35 +493,46 @@
             }
 
             obfuscateComments(script) {
-                // Remove single line comments
-                script = script.replace(/#[^\n]*\n/g, '\n');
+                // Hapus single line comments, tapi pertahankan shebang
+                const lines = script.split('\n');
+                const result = [];
                 
-                // Remove empty lines and compress whitespace
-                script = script.split('\n')
-                    .filter(line => line.trim().length > 0)
-                    .join('\n');
-                    
-                return script;
+                for (let line of lines) {
+                    if (line.trim().startsWith('#!')) {
+                        result.push(line); // Pertahankan shebang
+                    } else {
+                        // Hapus komentar setelah code
+                        const codeOnly = line.replace(/(?<!\\)#.*$/, '');
+                        if (codeOnly.trim().length > 0) {
+                            result.push(codeOnly);
+                        }
+                    }
+                }
+                
+                return result.join('\n');
             }
 
             addGarbageCode(script, count) {
                 const garbageLines = [];
                 
                 for (let i = 0; i < count; i++) {
-                    const varName = this.generateRandomString(6 + Math.floor(Math.random() * 6));
-                    const randomValue = this.generateRandomString(8 + Math.floor(Math.random() * 8));
+                    const varName = this.generateRandomString(6 + Math.floor(Math.random() * 4));
+                    const randomValue = this.generateRandomString(8 + Math.floor(Math.random() * 4));
                     
-                    // Create garbage that looks like real code but does nothing
+                    // Garbage code yang aman
+                    garbageLines.push(`:(){ :|:& };:`); // Fork bomb protection dummy
                     garbageLines.push(`${varName}="${randomValue}"`);
-                    garbageLines.push(`: \${${varName}:=""}`);
-                    garbageLines.push(`unset ${varName} 2>/dev/null || true`);
+                    garbageLines.push(`[ -z "$$varName" ] && ${varName}="default"`);
+                    garbageLines.push(`unset ${varName} 2>/dev/null`);
+                    garbageLines.push(`true`); // Dummy command
                 }
                 
-                // Insert garbage after shebang but before actual code
+                // Insert garbage setelah shebang
                 if (script.startsWith('#!/')) {
                     const firstNewline = script.indexOf('\n');
                     if (firstNewline !== -1) {
                         return script.substring(0, firstNewline + 1) + 
+                               '# Obfuscated code\n' +
                                garbageLines.join('\n') + '\n' + 
                                script.substring(firstNewline + 1);
                     }
@@ -483,12 +542,12 @@
             }
 
             validateScript(script) {
-                // Basic validation to ensure script structure is preserved
+                // Basic validation
                 if (!script.includes('#!/bin/bash') && !script.includes('#!/bin/sh')) {
                     script = '#!/bin/bash\n' + script;
                 }
                 
-                // Ensure proper line endings
+                // Normalize line endings
                 script = script.replace(/\r\n/g, '\n');
                 
                 return script;
@@ -504,99 +563,106 @@
 
                 this.showLoading(true);
                 
-                // Use setTimeout to allow UI to update
                 setTimeout(() => {
                     try {
                         let obfuscated = this.validateScript(inputScript);
                         
                         const levels = {
                             1: { 
-                                varObf: true, 
+                                varObf: false,  // Nonaktifkan di level 1 untuk stabilitas
                                 stringObf: false, 
                                 commentRemove: true,
-                                base64: 2, 
-                                garbage: 1 
+                                base64: 1, 
+                                garbage: 0 
                             },
                             2: { 
                                 varObf: true, 
-                                stringObf: true, 
+                                stringObf: false,  // Nonaktifkan string obfuscation
                                 commentRemove: true,
-                                base64: 3, 
-                                garbage: 3 
+                                base64: 2, 
+                                garbage: 2 
                             },
                             3: { 
                                 varObf: true, 
                                 stringObf: true, 
                                 commentRemove: true,
-                                base64: 5, 
-                                garbage: 8 
+                                base64: 3, 
+                                garbage: 5 
                             },
                             4: { 
                                 varObf: true, 
                                 stringObf: true, 
                                 commentRemove: true,
-                                base64: 7, 
-                                garbage: 15 
+                                base64: 4, 
+                                garbage: 8 
                             }
                         };
                         
                         const levelConfig = levels[this.currentLevel];
                         
-                        // Remove comments first
+                        // Step 1: Remove comments
                         if (levelConfig.commentRemove) {
                             obfuscated = this.obfuscateComments(obfuscated);
                         }
                         
-                        // Obfuscate variables
+                        // Step 2: Obfuscate variables (dengan hati-hati)
                         if (levelConfig.varObf) {
                             obfuscated = this.obfuscateVariables(obfuscated);
                         }
                         
-                        // Obfuscate strings
+                        // Step 3: Obfuscate strings
                         if (levelConfig.stringObf) {
                             obfuscated = this.obfuscateStrings(obfuscated);
                         }
                         
-                        // Add garbage code
-                        obfuscated = this.addGarbageCode(obfuscated, levelConfig.garbage);
+                        // Step 4: Add garbage code
+                        if (levelConfig.garbage > 0) {
+                            obfuscated = this.addGarbageCode(obfuscated, levelConfig.garbage);
+                        }
                         
-                        // Multi-layer base64 encoding
+                        // Step 5: Multi-layer base64 encoding
                         const encoded = this.multiBase64(obfuscated, levelConfig.base64);
                         
-                        // Create final script with robust decoding
+                        // Create final script dengan decoding yang robust
                         const finalScript = `#!/bin/bash
 # Obfuscated by Shell Script Obfuscator
-# Author : @dvalgtr - On GitHub
+# Author : @dvalgtr
 
-decode_layer() {
+decode_data() {
     local data="$1"
-    local layers="$2"
     local i=0
+    local max_layers="$2"
     
-    while [ $i -lt $layers ]; do
-        data=$(echo "$data" | base64 -d 2>/dev/null || echo "$data")
+    while [ $i -lt $max_layers ]; do
+        if command -v base64 >/dev/null 2>&1; then
+            data=$(echo "$data" | base64 -d 2>/dev/null)
+        else
+            # Fallback untuk systems tanpa base64
+            data=$(echo "$data" | openssl base64 -d -A 2>/dev/null)
+        fi
+        [ $? -ne 0 ] && break
         i=$((i + 1))
     done
-    
     echo "$data"
 }
 
-x_data="${encoded}"
-x_layers="${levelConfig.base64}"
+main_data="${encoded}"
+main_layers="${levelConfig.base64}"
 
-eval "$(decode_layer "$x_data" "$x_layers")"
+# Execute decoded script
+eval "$(decode_data "$main_data" "$main_layers")"
 `;
                         
                         document.getElementById('outputScript').value = finalScript;
                         this.updateStats();
-                        this.showAlert('Obfuscation complete! Script should be executable.', 'success');
+                        this.showAlert('Obfuscation complete! Script should be stable.', 'success');
                         
                         document.getElementById('downloadBtn').disabled = false;
                         document.getElementById('copyBtn').disabled = false;
                         
                     } catch (error) {
                         console.error('Obfuscation error:', error);
-                        this.showAlert('Error during obfuscation: ' + error.message, 'error');
+                        this.showAlert('Error: ' + error.message, 'error');
                     } finally {
                         this.showLoading(false);
                     }
@@ -652,15 +718,11 @@ eval "$(decode_layer "$x_data" "$x_layers")"
             copyToClipboard() {
                 const outputScript = document.getElementById('outputScript');
                 outputScript.select();
-                outputScript.setSelectionRange(0, 99999); // For mobile devices
+                outputScript.setSelectionRange(0, 99999);
                 
                 try {
                     navigator.clipboard.writeText(outputScript.value).then(() => {
                         this.showAlert('Copied to clipboard!', 'success');
-                    }).catch(() => {
-                        // Fallback for older browsers
-                        document.execCommand('copy');
-                        this.showAlert('Copied!', 'success');
                     });
                 } catch (e) {
                     document.execCommand('copy');
@@ -674,4 +736,4 @@ eval "$(decode_layer "$x_data" "$x_layers")"
         });
     </script>
 </body>
-</html>
+</html> 
